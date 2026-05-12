@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import transaction as db_transaction
 from django.utils import timezone
-from rest_framework import permissions, status
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -124,4 +124,19 @@ class PaymentWebhookView(APIView):
                 "token": TokenSerializer(token).data,
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class TransactionViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = TransactionSerializer
+
+    def get_queryset(self):
+        return (
+            Transaction.objects.filter(user=self.request.user)
+            .select_related("meter", "token")
+            .order_by("-created_at")
         )
