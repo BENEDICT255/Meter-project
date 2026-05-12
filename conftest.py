@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from meters.models import Meter
+
 User = get_user_model()
 
 
@@ -35,3 +37,13 @@ def other_authed_client(other_user):
     token = str(RefreshToken.for_user(other_user).access_token)
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
+
+
+@pytest.fixture
+def meter(user):
+    return Meter.objects.create(owner=user, meter_number="0100000001", label="Home")
+
+
+@pytest.fixture
+def other_meter(other_user):
+    return Meter.objects.create(owner=other_user, meter_number="0200000001", label="Other Home")
