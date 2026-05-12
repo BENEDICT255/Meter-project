@@ -102,12 +102,17 @@ class PaymentWebhookView(APIView):
                     value=value,
                     strategy=strategy.name,
                 )
-            else:
+            elif provider_status in ("failed", "cancelled"):
                 txn.status = Transaction.Status.FAILED
                 txn.save(update_fields=["status", "updated_at"])
                 return Response(
                     {"transaction": TransactionSerializer(txn).data, "token": None},
                     status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"detail": f"unknown status: {provider_status!r}"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
         # SMS dispatch outside the DB transaction; failures must not roll back.

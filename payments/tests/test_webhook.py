@@ -137,3 +137,21 @@ def test_failed_payload_marks_failed(api_client, pending_txn):
     pending_txn.refresh_from_db()
     assert pending_txn.status == "failed"
     assert not Token.objects.filter(transaction=pending_txn).exists()
+
+
+@override_settings(WEBHOOK_HMAC_SECRET=SECRET.decode())
+@pytest.mark.django_db
+def test_unknown_status_returns_400(api_client, pending_txn):
+    resp = _post_webhook(
+        api_client,
+        {
+            "control_number": pending_txn.control_number,
+            "amount": "5000",
+            "provider_reference": "pp-6",
+            "status": "processing",
+        },
+    )
+    assert resp.status_code == 400
+    pending_txn.refresh_from_db()
+    assert pending_txn.status == "pending"
+    assert not Token.objects.filter(transaction=pending_txn).exists()
