@@ -21,10 +21,12 @@ INSTALLED_APPS = [
     "accounts",
     "meters",
     "payments",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -90,3 +92,7 @@ TOKEN_SIMPLE_MULTIPLIER = int(os.environ.get("TOKEN_SIMPLE_MULTIPLIER", "1357"))
 TOKEN_HMAC_SECRET = os.environ.get("TOKEN_HMAC_SECRET", "")
 SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "console")
 TRANSACTION_TTL_MINUTES = int(os.environ.get("TRANSACTION_TTL_MINUTES", "30"))
+
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
