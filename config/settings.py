@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "accounts",
     "meters",
+    "payments",
 ]
 
 MIDDLEWARE = [
