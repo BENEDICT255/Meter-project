@@ -1,13 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Droplet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,75 +52,92 @@ export default function BuyPage() {
 
   if (meters.data && meters.data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No meters yet</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p>You need to add a meter before you can buy a token.</p>
-          <Link href="/meters" className={buttonVariants()}>
-            Add a meter first
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="mx-auto max-w-md py-12 text-center">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10">
+          <Droplet className="size-7 text-primary" />
+        </div>
+        <h2 className="mt-6 text-2xl font-semibold tracking-tight">Add your first meter</h2>
+        <p className="mt-2 text-muted-foreground">
+          You need a registered meter before you can buy a token.
+        </p>
+        <Link href="/meters" className={buttonVariants({ size: "lg", className: "mt-6 h-12 px-6 text-base" })}>
+          Add a meter
+        </Link>
+      </div>
     );
   }
 
   return (
-    <Card className="max-w-md">
-      <CardHeader>
-        <CardTitle>Buy a token</CardTitle>
-      </CardHeader>
+    <div className="mx-auto max-w-lg">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Buy a token</h1>
+        <p className="text-muted-foreground">Pick a meter and enter the amount in shillings.</p>
+      </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="meter_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Meter</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pick a meter" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {meters.data?.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.meter_number}
-                          {m.label ? ` — ${m.label}` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount (TZS)</FormLabel>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
+          <FormField
+            control={form.control}
+            name="meter_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Meter</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Input inputMode="numeric" placeholder="5000" {...field} />
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Pick a meter" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {form.formState.errors.root && (
-              <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+                  <SelectContent>
+                    {meters.data?.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <span className="font-mono">{m.meter_number}</span>
+                        {m.label ? <span className="ml-2 text-muted-foreground">— {m.label}</span> : null}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
-            <Button type="submit" disabled={initiate.isPending} className="w-full">
-              {initiate.isPending ? "Initiating..." : "Pay"}
-            </Button>
-          </CardContent>
+          />
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Amount</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                      TZS
+                    </span>
+                    <Input
+                      inputMode="numeric"
+                      placeholder="5000"
+                      className="h-14 pl-14 text-2xl font-semibold tracking-tight"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {form.formState.errors.root && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {form.formState.errors.root.message}
+            </div>
+          )}
+          <Button
+            type="submit"
+            size="lg"
+            disabled={initiate.isPending}
+            className="h-12 w-full text-base"
+          >
+            {initiate.isPending ? "Generating control number..." : "Continue"}
+          </Button>
         </form>
       </Form>
-    </Card>
+    </div>
   );
 }

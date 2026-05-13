@@ -1,12 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Gauge, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCreateMeter, useDeleteMeter, useMeters } from "@/hooks/use-meters";
@@ -44,71 +44,89 @@ export default function MetersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add a meter</CardTitle>
-        </CardHeader>
+    <div className="mx-auto max-w-2xl space-y-10">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Meters</h1>
+        <p className="text-muted-foreground">Register the water meters you want to top up.</p>
+      </div>
+
+      <section className="rounded-xl border bg-white p-6">
+        <h2 className="text-lg font-semibold">Add a meter</h2>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="meter_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Meter number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0100000001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="label"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Label (optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Home" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {form.formState.errors.root && (
-                <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-4">
+            <FormField
+              control={form.control}
+              name="meter_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meter number</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="0100000001"
+                      className="h-11 font-mono"
+                      inputMode="numeric"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-              <Button type="submit" disabled={create.isPending}>
-                {create.isPending ? "Adding..." : "Add meter"}
-              </Button>
-            </CardContent>
+            />
+            <FormField
+              control={form.control}
+              name="label"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Label (optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Home" className="h-11" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {form.formState.errors.root && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                {form.formState.errors.root.message}
+              </div>
+            )}
+            <Button type="submit" disabled={create.isPending}>
+              {create.isPending ? "Adding..." : "Add meter"}
+            </Button>
           </form>
         </Form>
-      </Card>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your meters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {meters.isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+      <section>
+        <h2 className="text-lg font-semibold">Your meters</h2>
+        <div className="mt-4 overflow-hidden rounded-xl border bg-white">
+          {meters.isLoading && (
+            <p className="px-6 py-12 text-center text-sm text-muted-foreground">Loading...</p>
+          )}
           {meters.data && meters.data.length === 0 && (
-            <p className="text-sm text-muted-foreground">No meters yet.</p>
+            <p className="px-6 py-12 text-center text-sm text-muted-foreground">
+              No meters yet.
+            </p>
           )}
           {meters.data && meters.data.length > 0 && (
             <ul className="divide-y">
               {meters.data.map((m) => (
-                <li key={m.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-mono">{m.meter_number}</p>
-                    {m.label && <p className="text-sm text-muted-foreground">{m.label}</p>}
+                <li key={m.id} className="flex items-center justify-between px-5 py-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Gauge className="size-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-mono text-sm">{m.meter_number}</p>
+                      {m.label && (
+                        <p className="truncate text-xs text-muted-foreground">{m.label}</p>
+                      )}
+                    </div>
                   </div>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Delete meter ${m.meter_number}`}
                     disabled={remove.isPending}
                     onClick={() => {
                       if (confirm(`Delete meter ${m.meter_number}?`)) {
@@ -116,14 +134,14 @@ export default function MetersPage() {
                       }
                     }}
                   >
-                    Delete
+                    <Trash2 className="size-4 text-muted-foreground" />
                   </Button>
                 </li>
               ))}
             </ul>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 }

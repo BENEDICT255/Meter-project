@@ -1,12 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Droplets } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useRegister } from "@/hooks/use-auth";
@@ -35,15 +35,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Create an account</CardTitle>
-          <CardDescription>Daraja Water</CardDescription>
-        </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
+    <main className="flex min-h-screen flex-col bg-white">
+      <header className="px-8 py-6">
+        <div className="flex items-center gap-2 text-foreground">
+          <Droplets className="size-6 text-primary" />
+          <span className="text-lg font-semibold tracking-tight">Daraja Water</span>
+        </div>
+      </header>
+      <div className="flex flex-1 items-center justify-center px-6 pb-16">
+        <div className="w-full max-w-md space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Create an account</h1>
+            <p className="text-muted-foreground">Top up your water meter in seconds.</p>
+          </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="phone_number"
@@ -51,7 +57,13 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Phone number</FormLabel>
                     <FormControl>
-                      <Input placeholder="+255..." {...field} />
+                      <Input
+                        placeholder="+255700000000"
+                        className="h-12 text-base"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -64,30 +76,40 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input
+                        type="password"
+                        className="h-12 text-base"
+                        autoComplete="new-password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               {form.formState.errors.root && (
-                <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                  {form.formState.errors.root.message}
+                </div>
               )}
-            </CardContent>
-            <CardFooter className="mt-4 flex flex-col gap-3">
-              <Button type="submit" disabled={register.isPending} className="w-full">
-                {register.isPending ? "Creating account..." : "Register"}
+              <Button
+                type="submit"
+                size="lg"
+                disabled={register.isPending}
+                className="h-12 w-full text-base"
+              >
+                {register.isPending ? "Creating account..." : "Create account"}
               </Button>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/login" className="underline">
+                <Link href="/login" className="font-medium text-primary hover:underline">
                   Sign in
                 </Link>
               </p>
-            </CardFooter>
-          </form>
-        </Form>
-      </Card>
+            </form>
+          </Form>
+        </div>
+      </div>
     </main>
   );
 }
