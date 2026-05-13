@@ -49,7 +49,7 @@ export default function TransactionDetailPage({ params }: PageProps) {
         <p className="mt-2 text-muted-foreground">
           Enter this on your meter to top up.
         </p>
-        <div className="mt-6 rounded-xl border bg-muted/30 p-6 text-center">
+        <div className="mt-6 rounded-xl border bg-white p-6 text-center shadow-sm">
           <p className="font-mono text-4xl font-semibold tracking-widest">{tokenValue}</p>
           <p className="mt-2 text-xs uppercase tracking-wider text-muted-foreground">
             Token
