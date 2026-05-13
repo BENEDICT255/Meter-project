@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -58,9 +58,9 @@ export default function BuyPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p>You need to add a meter before you can buy a token.</p>
-          <Button asChild>
-            <Link href="/meters">Add a meter first</Link>
-          </Button>
+          <Link href="/meters" className={buttonVariants()}>
+            Add a meter first
+          </Link>
         </CardContent>
       </Card>
     );
