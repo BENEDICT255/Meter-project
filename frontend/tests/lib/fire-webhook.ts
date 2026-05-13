@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-const API = "http://127.0.0.1:8000/api";
+const API = process.env.DJANGO_API_URL ?? "http://127.0.0.1:8000/api";
 const SECRET = process.env.WEBHOOK_HMAC_SECRET ?? "dev-webhook-secret-change-me";
 
 export async function fireWebhook(controlNumber: string, amount: string): Promise<void> {
