@@ -49,7 +49,13 @@ uv run pytest
 
 ## End-to-end sanity check
 
-This bash snippet exercises the full happy path. Run with the dev server on port 8000.
+This bash snippet exercises the full happy path against the Swahilies STK-push flow. Start the dev server with the fake payment provider so it doesn't try to hit the real Swahilies API:
+
+```bash
+PAYMENT_PROVIDER=fake uv run python manage.py runserver
+```
+
+Then in another shell:
 
 ```bash
 set -e
@@ -57,7 +63,6 @@ set -e
 API=http://127.0.0.1:8000/api
 PHONE="+255700000777"
 PASSWORD="pw-sanity-1234"
-WEBHOOK_SECRET="dev-webhook-secret-change-me"  # match your .env
 
 # 1. Register
 curl -s -X POST "$API/auth/register/" \
@@ -76,21 +81,19 @@ METER_ID=$(curl -s -X POST "$API/meters/" \
   -d '{"meter_number":"0100007777","label":"Sanity"}' \
   | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
 
-# 4. Initiate
+# 4. Initiate (phone_number is required — the STK push target)
 INIT=$(curl -s -X POST "$API/transactions/initiate/" \
   -H "Authorization: Bearer $ACCESS" -H "Content-Type: application/json" \
-  -d "{\"meter_id\":\"$METER_ID\",\"amount\":\"5000\"}")
-CN=$(echo "$INIT" | python3 -c "import sys,json;print(json.load(sys.stdin)['control_number'])")
+  -d "{\"meter_id\":\"$METER_ID\",\"amount\":\"5000\",\"phone_number\":\"$PHONE\"}")
 TXN_ID=$(echo "$INIT" | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
-echo "Control number: $CN"
+ORDER_ID=$(echo "$INIT" | python3 -c "import sys,json;print(json.load(sys.stdin)['provider_reference'])")
+REF=$(echo "$INIT" | python3 -c "import sys,json;print(json.load(sys.stdin)['control_number'])")
+echo "Selcom reference: $REF   (provider order_id: $ORDER_ID)"
 
-# 5. Webhook with HMAC
-BODY=$(printf '{"control_number":"%s","amount":"5000","provider_reference":"sanity-ref","status":"paid"}' "$CN")
-SIG=$(python3 -c "import hmac,hashlib,sys;print('sha256='+hmac.new(b'$WEBHOOK_SECRET', b'''$BODY''', hashlib.sha256).hexdigest())")
-
+# 5. Webhook — Swahilies echoes our order_id back. No HMAC, any POST succeeds.
 curl -s -X POST "$API/webhooks/payment/" \
-  -H "Content-Type: application/json" -H "X-Signature: $SIG" \
-  -d "$BODY"
+  -H "Content-Type: application/json" \
+  -d "{\"transaction_details\":{\"order_id\":\"$ORDER_ID\"}}"
 echo
 
 # 6. Confirm token visible to owner
@@ -100,8 +103,9 @@ echo
 
 You should see `status: "paid"` and a non-empty `token.value`. The `runserver` console will log the SMS line from `ConsoleSmsProvider`.
 
-## Architecture seams (for upcoming work)
+## Architecture seams
 
-- `payments/token_logic.py` — `TokenStrategy` interface. Task 3 adds `HmacTokenStrategy`.
-- `payments/sms.py` — `SmsProvider` interface. Task 4 adds Beem / Twilio / Africa's Talking.
-- `payments/views.py:PaymentWebhookView` — task 2 updates the payload schema parsing to match the real provider.
+- `payments/providers/` — `swahilies.py` is the real client; `__init__.py` dispatches on `PAYMENT_PROVIDER` (`swahilies` or `fake`). Add a new provider by writing a module with the same `initiate_push(*, order_id, amount, phone_number) -> SwahiliesResponse` shape and extending the dispatcher.
+- `payments/token_logic.py` — `TokenStrategy` interface. `SimpleTokenStrategy` is the reversible Arduino/prototype path; `HmacTokenStrategy` (HOTP-style, set `TOKEN_STRATEGY=hmac`) is production-grade.
+- `payments/sms.py` — `SmsProvider` interface. `ConsoleSmsProvider` is the dev default; `MalipoPaySmsProvider` (set `SMS_PROVIDER=malipopay`) does the real send with 3-attempt backoff.
+- `payments/views.py:PaymentWebhookView` — accepts any POST shaped as `{transaction_details: {order_id}}`; treats arrival as success per Swahilies' contract.
