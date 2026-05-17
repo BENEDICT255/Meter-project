@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "accounts",
     "meters",
     "payments",
@@ -81,6 +82,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.ScopedRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "login": os.environ.get("LOGIN_RATE_LIMIT", "5/min"),
+        "initiate": os.environ.get("INITIATE_RATE_LIMIT", "10/min"),
+    },
 }
 
 AUTH_USER_MODEL = "accounts.User"

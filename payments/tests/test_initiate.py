@@ -3,9 +3,17 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from django.core.cache import cache
 
 from payments.models import Transaction
 from payments.providers.swahilies import SwahiliesError, SwahiliesResponse
+
+
+@pytest.fixture(autouse=True)
+def _clear_throttle_cache():
+    cache.clear()
+    yield
+    cache.clear()
 
 
 def _ok_response(reference="SLC-REF-001"):
@@ -125,3 +133,21 @@ def test_initiate_requires_auth(api_client, meter):
         format="json",
     )
     assert resp.status_code == 401
+
+
+@pytest.mark.django_db
+def test_initiate_is_rate_limited(authed_client, meter):
+    # Default rate is 10/min; the 11th request within the window must be 429.
+    payload = {
+        "meter_id": str(meter.id),
+        "amount": "5000",
+        "phone_number": "+255700000777",
+    }
+    refs = (SwahiliesResponse(reference=f"REF-{i}") for i in range(20))
+    with patch("payments.views.initiate_push", side_effect=lambda **kw: next(refs)):
+        statuses = [
+            authed_client.post("/api/transactions/initiate/", payload, format="json").status_code
+            for _ in range(11)
+        ]
+    assert statuses[-1] == 429
+    assert statuses.count(429) >= 1

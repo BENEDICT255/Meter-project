@@ -18,6 +18,7 @@ from .token_logic import get_strategy
 
 class InitiatePaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = "initiate"
 
     def post(self, request):
         serializer = InitiateSerializer(data=request.data, context={"request": request})
