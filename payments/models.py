@@ -23,7 +23,7 @@ class Transaction(models.Model):
         related_name="transactions",
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    control_number = models.CharField(max_length=12, unique=True)
+    control_number = models.CharField(max_length=32, unique=True, null=True, blank=True)
     status = models.CharField(
         max_length=10,
         choices=Status.choices,

@@ -93,6 +93,11 @@ TOKEN_HMAC_SECRET = os.environ.get("TOKEN_HMAC_SECRET", "")
 SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "console")
 TRANSACTION_TTL_MINUTES = int(os.environ.get("TRANSACTION_TTL_MINUTES", "30"))
 
+SWAHILIES_API_URL = os.environ.get("SWAHILIES_API_URL", "https://swahiliesapi.invict.site/Api")
+SWAHILIES_API_KEY = os.environ.get("SWAHILIES_API_KEY", "")
+SWAHILIES_IS_LIVE = os.environ.get("SWAHILIES_IS_LIVE", "False") == "True"
+SWAHILIES_WEBHOOK_URL = os.environ.get("SWAHILIES_WEBHOOK_URL", "")
+
 CORS_ALLOWED_ORIGINS = [
     o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
 ]

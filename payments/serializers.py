@@ -36,6 +36,7 @@ class TransactionSerializer(serializers.ModelSerializer):
 class InitiateSerializer(serializers.Serializer):
     meter_id = serializers.UUIDField()
     amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"))
+    phone_number = serializers.CharField(max_length=20)
 
     def validate_meter_id(self, value):
         user = self.context["request"].user
