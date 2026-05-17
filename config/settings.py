@@ -90,6 +90,7 @@ WEBHOOK_HMAC_SECRET = os.environ["WEBHOOK_HMAC_SECRET"]
 TOKEN_STRATEGY = os.environ.get("TOKEN_STRATEGY", "simple")
 TOKEN_SIMPLE_MULTIPLIER = int(os.environ.get("TOKEN_SIMPLE_MULTIPLIER", "1357"))
 TOKEN_HMAC_SECRET = os.environ.get("TOKEN_HMAC_SECRET", "")
+TOKEN_HMAC_DIGITS = int(os.environ.get("TOKEN_HMAC_DIGITS", "12"))
 SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "console")
 TRANSACTION_TTL_MINUTES = int(os.environ.get("TRANSACTION_TTL_MINUTES", "30"))
 
