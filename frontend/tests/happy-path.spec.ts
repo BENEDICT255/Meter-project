@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-import { fireWebhook } from "./lib/fire-webhook";
+import { fetchTransactionOrderId, fireWebhook } from "./lib/fire-webhook";
+
+// NOTE: requires the Django dev server running with PAYMENT_PROVIDER=fake.
+// Without that, InitiatePaymentView will try to reach the real Swahilies API.
 
 function randomSuffix(n: number): string {
   return Math.floor(Math.random() * 10 ** n)
@@ -36,27 +39,28 @@ test("happy path: register → add meter → buy → webhook → paid", async ({
   await page.waitForURL("/buy");
   await page.getByRole("combobox").click();
   await page.getByRole("option", { name: new RegExp(meterNumber) }).click();
-  await page.getByLabel("Amount (TZS)").fill("5000");
+  await page.getByLabel("Amount").fill("5000");
+  // Phone field is prefilled from the logged-in user, but type it explicitly to be safe.
+  await page.getByLabel("Phone for payment").fill(phone);
   await page.getByRole("button", { name: "Pay" }).click();
 
-  // 5. Land on /transactions/{id} with pending state
+  // 5. Land on /transactions/{id} with the pending state ("check your phone")
   await page.waitForURL(/\/transactions\/[0-9a-f-]{36}/);
-  await expect(page.getByText("Waiting for payment...")).toBeVisible();
+  await expect(page.getByText("Check your phone")).toBeVisible();
 
-  // Capture the control number from the page (12-digit, 99-prefixed)
-  const controlNumber = await page
-    .locator("p.font-mono")
-    .filter({ hasText: /^99\d{10}$/ })
-    .first()
-    .innerText();
-  expect(controlNumber).toMatch(/^99\d{10}$/);
+  // Pull the txn id from the URL, then fetch its provider_reference (order_id) via the API.
+  const url = new URL(page.url());
+  const txnId = url.pathname.split("/").filter(Boolean).pop()!;
+  const access = await page.evaluate(() => localStorage.getItem("daraja.access") ?? "");
+  expect(access).not.toBe("");
+  const orderId = await fetchTransactionOrderId(txnId, access);
 
-  // 6. Fire the webhook side-channel
-  await fireWebhook(controlNumber, "5000");
+  // 6. Fire the webhook side-channel keyed on the order_id Swahilies would echo back.
+  await fireWebhook(orderId);
 
   // 7. Page should swap to paid within polling interval (2s) + a bit of slack
-  await expect(page.getByText("✓ Payment received")).toBeVisible({ timeout: 10_000 });
-  const tokenValue = await page.locator("p.text-3xl.font-mono").innerText();
+  await expect(page.getByText("Payment received")).toBeVisible({ timeout: 10_000 });
+  const tokenValue = await page.locator("p.font-mono.text-4xl").innerText();
   expect(tokenValue).toMatch(/^\d+$/);
   expect(tokenValue.length).toBeGreaterThanOrEqual(7);
 });

@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Token, Transaction
-from .providers.swahilies import SwahiliesError, initiate_push
+from .providers import SwahiliesError, initiate_push
 from .serializers import InitiateSerializer, TokenSerializer, TransactionSerializer
 from .sms import send_token_sms
 from .token_logic import get_strategy

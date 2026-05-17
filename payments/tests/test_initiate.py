@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from django.core.cache import cache
+from django.test import override_settings
 
 from payments.models import Transaction
 from payments.providers.swahilies import SwahiliesError, SwahiliesResponse
@@ -119,6 +120,26 @@ def test_initiate_rejects_nonpositive_amount(authed_client, meter):
         format="json",
     )
     assert resp.status_code == 400
+
+
+@override_settings(PAYMENT_PROVIDER="fake")
+@pytest.mark.django_db
+def test_initiate_with_fake_provider_skips_http(authed_client, meter):
+    # No mock for requests.post — if the fake mode isn't honored, network
+    # access would fail (or hit the real API). The deterministic FAKE-* prefix
+    # confirms we took the fake path.
+    resp = authed_client.post(
+        "/api/transactions/initiate/",
+        {
+            "meter_id": str(meter.id),
+            "amount": "5000",
+            "phone_number": "+255700000777",
+        },
+        format="json",
+    )
+    assert resp.status_code == 201, resp.content
+    body = resp.json()
+    assert body["control_number"].startswith("FAKE-")
 
 
 @pytest.mark.django_db

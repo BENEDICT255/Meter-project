@@ -55,10 +55,12 @@ export default function TransactionDetailPage({ params }: PageProps) {
             Token
           </p>
         </div>
-        <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-          <span>Control number</span>
-          <span className="font-mono text-foreground">{data.control_number}</span>
-        </div>
+        {data.control_number && (
+          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+            <span>Reference</span>
+            <span className="font-mono text-foreground">{data.control_number}</span>
+          </div>
+        )}
         <Button
           variant="outline"
           className="mt-6 h-11 w-full"
@@ -102,19 +104,21 @@ export default function TransactionDetailPage({ params }: PageProps) {
       <StatusBadge tone="info" icon={<Clock3 className="size-5 animate-pulse" />}>
         Waiting for payment
       </StatusBadge>
-      <h1 className="mt-6 text-3xl font-bold tracking-tight">Pay this control number</h1>
+      <h1 className="mt-6 text-3xl font-bold tracking-tight">Check your phone</h1>
       <p className="mt-2 text-muted-foreground">
-        Use M-Pesa, Tigo Pesa, or your bank. This page updates automatically.
+        We&apos;ve sent a payment popup to your phone — accept it to complete the top-up. This page updates automatically.
       </p>
-      <div className="mt-6 rounded-xl border bg-muted/30 p-6 text-center">
-        <p className="font-mono text-3xl font-semibold tracking-widest">{data.control_number}</p>
-        <p className="mt-2 text-xs uppercase tracking-wider text-muted-foreground">
-          Control number
-        </p>
-      </div>
-      <div className="mt-4 flex items-center justify-between rounded-lg border bg-white px-4 py-3 text-sm">
-        <span className="text-muted-foreground">Amount</span>
-        <span className="font-semibold">TZS {data.amount}</span>
+      <div className="mt-6 rounded-xl border bg-white px-4 py-4 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Amount</span>
+          <span className="font-semibold">TZS {data.amount}</span>
+        </div>
+        {data.control_number && (
+          <div className="mt-3 flex items-center justify-between border-t pt-3">
+            <span className="text-muted-foreground">Reference</span>
+            <span className="font-mono">{data.control_number}</span>
+          </div>
+        )}
       </div>
     </div>
   );

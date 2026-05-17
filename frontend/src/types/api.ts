@@ -27,7 +27,7 @@ export interface Transaction {
   id: string;
   meter: string;
   amount: string;
-  control_number: string;
+  control_number: string | null;
   status: TransactionStatus;
   provider_reference: string;
   paid_at: string | null;

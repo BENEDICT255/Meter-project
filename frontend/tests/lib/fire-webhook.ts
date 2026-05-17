@@ -1,26 +1,28 @@
-import crypto from "node:crypto";
-
 const API = process.env.DJANGO_API_URL ?? "http://127.0.0.1:8000/api";
-const SECRET = process.env.WEBHOOK_HMAC_SECRET ?? "dev-webhook-secret-change-me";
 
-export async function fireWebhook(controlNumber: string, amount: string): Promise<void> {
-  const body = JSON.stringify({
-    control_number: controlNumber,
-    amount,
-    provider_reference: `e2e-${Date.now()}`,
-    status: "paid",
-  });
-  const signature = "sha256=" + crypto.createHmac("sha256", SECRET).update(body).digest("hex");
+export async function fireWebhook(orderId: string): Promise<void> {
+  const body = JSON.stringify({ transaction_details: { order_id: orderId } });
   const resp = await fetch(`${API}/webhooks/payment/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Signature": signature,
-    },
+    headers: { "Content-Type": "application/json" },
     body,
   });
   if (!resp.ok) {
     const text = await resp.text();
     throw new Error(`Webhook returned ${resp.status}: ${text}`);
   }
+}
+
+export async function fetchTransactionOrderId(
+  txnId: string,
+  access: string,
+): Promise<string> {
+  const resp = await fetch(`${API}/transactions/${txnId}/`, {
+    headers: { Authorization: `Bearer ${access}` },
+  });
+  if (!resp.ok) {
+    throw new Error(`GET /transactions/${txnId}/ → ${resp.status}`);
+  }
+  const data = (await resp.json()) as { provider_reference: string };
+  return data.provider_reference;
 }

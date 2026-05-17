@@ -106,6 +106,7 @@ MALIPOPAY_SENDER = os.environ.get("MALIPOPAY_SENDER", "Daraja")
 MALIPOPAY_OPERATOR_ID = os.environ.get("MALIPOPAY_OPERATOR_ID", "")
 TRANSACTION_TTL_MINUTES = int(os.environ.get("TRANSACTION_TTL_MINUTES", "30"))
 
+PAYMENT_PROVIDER = os.environ.get("PAYMENT_PROVIDER", "swahilies")
 SWAHILIES_API_URL = os.environ.get("SWAHILIES_API_URL", "https://swahiliesapi.invict.site/Api")
 SWAHILIES_API_KEY = os.environ.get("SWAHILIES_API_KEY", "")
 SWAHILIES_IS_LIVE = os.environ.get("SWAHILIES_IS_LIVE", "False") == "True"

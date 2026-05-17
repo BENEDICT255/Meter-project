@@ -38,6 +38,7 @@ export function useTransaction(id: string) {
 interface InitiateInput {
   meter_id: string;
   amount: string;
+  phone_number: string;
 }
 
 export function useInitiateTransaction() {

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Droplet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -11,9 +12,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMe } from "@/hooks/use-auth";
 import { useMeters } from "@/hooks/use-meters";
 import { useInitiateTransaction } from "@/hooks/use-transactions";
 import { getApiErrorMessage } from "@/lib/api";
+
+const PHONE_REGEX = /^(?:\+?255|0)\d{9}$/;
 
 const schema = z.object({
   meter_id: z.string().uuid("Pick a meter"),
@@ -21,6 +25,9 @@ const schema = z.object({
     .string()
     .regex(/^\d+$/, "Amount must be a positive integer")
     .refine((v) => parseInt(v, 10) >= 1, "Amount must be at least 1"),
+  phone_number: z
+    .string()
+    .regex(PHONE_REGEX, "Enter a Tanzanian number (e.g. 0712345678 or +255712345678)"),
 });
 
 type Values = z.infer<typeof schema>;
@@ -28,12 +35,19 @@ type Values = z.infer<typeof schema>;
 export default function BuyPage() {
   const router = useRouter();
   const meters = useMeters();
+  const me = useMe();
   const initiate = useInitiateTransaction();
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { meter_id: "", amount: "" },
+    defaultValues: { meter_id: "", amount: "", phone_number: "" },
   });
+
+  useEffect(() => {
+    if (me.data?.phone_number && !form.getValues("phone_number")) {
+      form.setValue("phone_number", me.data.phone_number);
+    }
+  }, [me.data?.phone_number, form]);
 
   const onSubmit = (values: Values) => {
     initiate.mutate(values, {
@@ -71,7 +85,9 @@ export default function BuyPage() {
     <div className="mx-auto max-w-lg">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Buy a token</h1>
-        <p className="text-muted-foreground">Pick a meter and enter the amount in shillings.</p>
+        <p className="text-muted-foreground">
+          Pick a meter, enter the amount, and confirm the phone that will receive the payment popup.
+        </p>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
@@ -123,6 +139,24 @@ export default function BuyPage() {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="phone_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone for payment</FormLabel>
+                <FormControl>
+                  <Input
+                    inputMode="tel"
+                    placeholder="+255712345678"
+                    className="h-12"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           {form.formState.errors.root && (
             <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {form.formState.errors.root.message}
@@ -134,7 +168,7 @@ export default function BuyPage() {
             disabled={initiate.isPending}
             className="h-12 w-full text-base"
           >
-            {initiate.isPending ? "Generating control number..." : "Continue"}
+            {initiate.isPending ? "Starting payment..." : "Pay"}
           </Button>
         </form>
       </Form>
