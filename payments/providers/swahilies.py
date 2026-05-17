@@ -12,6 +12,12 @@ class SwahiliesError(RuntimeError):
         self.status_code = status_code
         self.body = body
 
+    def __str__(self) -> str:
+        base = super().__str__()
+        if self.status_code is None and not self.body:
+            return base
+        return f"{base} | http={self.status_code} body={self.body[:300]!r}"
+
 
 @dataclass(frozen=True)
 class SwahiliesResponse:
@@ -37,6 +43,8 @@ def initiate_push(*, order_id: str, amount: Decimal, phone_number: str) -> Swahi
         },
     }
 
+    print(payload)
+
     try:
         response = requests.post(
             settings.SWAHILIES_API_URL,
@@ -49,12 +57,15 @@ def initiate_push(*, order_id: str, amount: Decimal, phone_number: str) -> Swahi
 
     try:
         body = response.json()
+        print(body)
     except ValueError as exc:
         raise SwahiliesError(
             "Swahilies returned non-JSON body",
             status_code=response.status_code,
             body=response.text,
         ) from exc
+
+    print(body.get("code"))
 
     if body.get("code") != 200:
         raise SwahiliesError(

@@ -42,6 +42,8 @@ class InitiatePaymentView(APIView):
                 amount=amount,
                 phone_number=phone_number,
             )
+
+            print(result)
         except SwahiliesError as exc:
             txn.status = Transaction.Status.FAILED
             txn.save(update_fields=["status", "updated_at"])
