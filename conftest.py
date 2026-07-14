@@ -8,6 +8,14 @@ from meters.models import Meter
 User = get_user_model()
 
 
+@pytest.fixture(autouse=True)
+def _never_send_real_sms(settings):
+    # Safety net: no test should ever hit the live MalipoPay gateway, whatever
+    # SMS_PROVIDER the local .env sets. Tests that exercise the real provider
+    # build MalipoPaySmsProvider directly and are unaffected by this.
+    settings.SMS_PROVIDER = "console"
+
+
 @pytest.fixture
 def user(db):
     return User.objects.create_user(phone_number="+255700000001", password="pw-strong-1")

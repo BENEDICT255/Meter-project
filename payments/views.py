@@ -36,11 +36,9 @@ class InitiatePaymentView(APIView):
             expires_at=timezone.now() + timedelta(minutes=settings.TRANSACTION_TTL_MINUTES),
         )
 
-        # --- TEMPORARY TEST HACK: Generate token immediately for UI testing ---
-        from .models import Token
-        from .token_logic import get_strategy
+        # Issue the token at initiation and SMS it to the customer.
         strategy = get_strategy()
-        Token.objects.create(
+        token = Token.objects.create(
             transaction=txn,
             value=strategy.generate(
                 amount=txn.amount,
@@ -49,7 +47,7 @@ class InitiatePaymentView(APIView):
             ),
             strategy=strategy.name,
         )
-        # --- END TEMPORARY TEST HACK ---
+        send_token_sms(token)
 
         try:
             result = initiate_push(
@@ -117,15 +115,16 @@ class PaymentWebhookView(APIView):
             txn.save(update_fields=["status", "paid_at", "updated_at"])
 
             strategy = get_strategy()
-            value = strategy.generate(
-                amount=txn.amount,
-                meter_number=txn.meter.meter_number,
-                nonce=str(txn.id),
-            )
-            token = Token.objects.create(
+            token, _ = Token.objects.get_or_create(
                 transaction=txn,
-                value=value,
-                strategy=strategy.name,
+                defaults={
+                    "value": strategy.generate(
+                        amount=txn.amount,
+                        meter_number=txn.meter.meter_number,
+                        nonce=str(txn.id),
+                    ),
+                    "strategy": strategy.name,
+                },
             )
 
         send_token_sms(token)
