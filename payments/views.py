@@ -36,6 +36,21 @@ class InitiatePaymentView(APIView):
             expires_at=timezone.now() + timedelta(minutes=settings.TRANSACTION_TTL_MINUTES),
         )
 
+        # --- TEMPORARY TEST HACK: Generate token immediately for UI testing ---
+        from .models import Token
+        from .token_logic import get_strategy
+        strategy = get_strategy()
+        Token.objects.create(
+            transaction=txn,
+            value=strategy.generate(
+                amount=txn.amount,
+                meter_number=txn.meter.meter_number,
+                nonce=str(txn.id),
+            ),
+            strategy=strategy.name,
+        )
+        # --- END TEMPORARY TEST HACK ---
+
         try:
             result = initiate_push(
                 order_id=order_id,

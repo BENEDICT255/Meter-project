@@ -14,3 +14,6 @@ frontend/out/
 frontend/playwright-report/
 frontend/test-results/
 frontend/.env*.local
+
+# Database
+db.sqlite3

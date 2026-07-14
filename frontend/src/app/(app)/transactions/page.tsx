@@ -47,7 +47,11 @@ export default function TransactionsPage() {
                   className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-muted/40"
                 >
                   <div className="min-w-0">
-                    <p className="font-mono text-sm">{tx.control_number}</p>
+                    <p className="font-mono text-sm">
+                      {tx.token
+                        ? `Token: ${tx.token.value}`
+                        : tx.control_number}
+                    </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {new Date(tx.created_at).toLocaleString()}
                     </p>
